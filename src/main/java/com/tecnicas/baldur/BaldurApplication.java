@@ -6,12 +6,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 
 import com.tecnicas.baldur.model.User;
 import com.tecnicas.baldur.repository.UserRepository;
 
-@SpringBootApplication(scanBasePackages={
-"com.tecnicas.baldur.service"})
+@ComponentScan({ "com.tecnicas.baldur.controller", "com.tecnicas.baldur.service" }) 
+@SpringBootApplication
 public class BaldurApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(BaldurApplication.class);
@@ -29,5 +30,5 @@ public class BaldurApplication {
 			employeeRepository.save(new User("David", "Gilmour", true));
 			logger.info("The sample data has been generated");
 		};
-}
+	}
 }

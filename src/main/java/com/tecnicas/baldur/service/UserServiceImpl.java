@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.tecnicas.baldur.model.User;
 import com.tecnicas.baldur.repository.UserRepository;
 
+@Service("userService")
 public class UserServiceImpl implements UserService {
 
 	@Autowired
