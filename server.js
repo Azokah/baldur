@@ -50,6 +50,22 @@ app.get('/setup', function(req, res) {
     });
   });
 
+// Registracion de Usuario
+app.get('/register', function(req,res){
+    //'Formulario' de usuario
+    var user = new User({
+        name: req.body.name,
+        password: req.body.password,
+        admin: false
+    });
+    //Guardamos el nuevo user en la db
+    user.save(function(err) {
+        if (err) throw err;
+        console.log('Usuario creado');
+        res.json({ success: true });
+      });
+});
+
 // Instancia el router de apis
 var apiRoutes = express.Router(); 
 
