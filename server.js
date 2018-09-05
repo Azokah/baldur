@@ -53,17 +53,23 @@ app.get('/setup', function(req, res) {
 // Registracion de Usuario
 app.get('/register', function(req,res){
     //'Formulario' de usuario
-    var user = new User({
-        name: req.body.name,
-        password: req.body.password,
-        admin: false
-    });
-    //Guardamos el nuevo user en la db
-    user.save(function(err) {
-        if (err) throw err;
-        console.log('Usuario creado');
-        res.json({ success: true });
-      });
+    if(req.query.name && req.query.password){
+        var user = new User({
+            name: req.query.name,
+            password: req.query.password,
+            admin: false
+        });
+        console.log(req.query)
+        //Guardamos el nuevo user en la db
+        user.save(function(err) {
+            if (err) throw err;
+            console.log('Usuario creado');
+            res.json({ success: true , message: 'Usuario registrado'});
+        });
+    }else{
+        console.log("No se registro por falta de los campos usuario o password");
+        return res.json({ success: false, message: 'No se registro por falta de los campos usuario o password' });  
+    }
 });
 
 // Instancia el router de apis
@@ -87,8 +93,15 @@ apiRoutes.post('/authenticate', function(req, res) {
                     admin: user.admin 
                 };
                 var token = jwt.sign(payload, app.get('superSecret'), {
-                    expiresIn: 600 // Expira en 10 minutos
+                    expiresIn: 20 // Expira en 10 minutos
                 });
+
+                //Actualiza el campo TOKEN del usuario
+                user.activeToken = token
+                user.save(function(err) {
+                    if (err) throw err;
+                  });
+
                 // Retorna la data con el token
                 res.json({
                     success: true,
@@ -109,6 +122,12 @@ apiRoutes.use(function(req, res, next) {
       // Verifica que el token tenga la clave secreta
       jwt.verify(token, app.get('superSecret'), function(err, decoded) {      
         if (err) {
+            User.findOne({ activeToken: token}, function(err, user) {
+                user.activeToken = ''
+                user.save(function(err) {
+                    if (err) throw err;
+                  });
+            });
           return res.json({ success: false, message: 'Error al autenticar el token.' });    
         } else {
           // Si el token esta OK, continua con la ejecucion
@@ -128,6 +147,7 @@ apiRoutes.use(function(req, res, next) {
 // Mensaje si entramos a la direccion dela api (GET http://localhost:8080/api/)
 apiRoutes.get('/', function(req, res) {
   res.json({
+        greeting: "Hola "+req.body.name,
        message: 'Lista de endpoints',
        endpoints: [
             {
@@ -138,9 +158,15 @@ apiRoutes.get('/', function(req, res) {
             },
             {
                 name: "users",
-                mehotd: "GET",
+                method: "GET",
                 url: "http://localhost:8080/api/users",
                 desc: "Devuelve la lista de usuarios"
+            },
+            {
+                name: "online",
+                method: "GET",
+                url: "http://localhost:8080/api/online",
+                desc: "Devuelve la lista de usuarios online"
             }
         ] 
     });
@@ -152,6 +178,14 @@ apiRoutes.get('/users', function(req, res) {
     res.json(users);
   });
 });
+
+// Ruta para listar usuarios online (GET http://localhost:8080/api/online)
+apiRoutes.get('/online', function(req, res) {
+    User.find({}, function(err, users) {
+      res.json(users);
+    });
+  });
+
 
 // Ruta generica de la api, agrega prefix API a la url
 app.use('/api', apiRoutes);
