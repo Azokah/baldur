@@ -57,7 +57,9 @@ app.get('/register', function(req,res){
         var user = new User({
             name: req.query.name,
             password: req.query.password,
-            admin: false
+            admin: false,
+            online: false,
+            activeToken: ''
         });
         console.log(req.query)
         //Guardamos el nuevo user en la db
@@ -98,6 +100,7 @@ apiRoutes.post('/authenticate', function(req, res) {
 
                 //Actualiza el campo TOKEN del usuario
                 user.activeToken = token
+                user.online = true
                 user.save(function(err) {
                     if (err) throw err;
                   });
@@ -124,6 +127,7 @@ apiRoutes.use(function(req, res, next) {
         if (err) {
             User.findOne({ activeToken: token}, function(err, user) {
                 user.activeToken = ''
+                user.online = false
                 user.save(function(err) {
                     if (err) throw err;
                   });
@@ -181,8 +185,8 @@ apiRoutes.get('/users', function(req, res) {
 
 // Ruta para listar usuarios online (GET http://localhost:8080/api/online)
 apiRoutes.get('/online', function(req, res) {
-    User.find({}, function(err, users) {
-      res.json(users);
+    User.find({online: true}, function(err, users) {
+        res.json(users);
     });
   });
 
