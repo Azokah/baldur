@@ -178,14 +178,14 @@ apiRoutes.get('/', function(req, res) {
 
 // Ruta para listar usuarios (GET http://localhost:8080/api/users)
 apiRoutes.get('/users', function(req, res) {
-  User.find({}, function(err, users) {
+  User.find({}, {name: 1,online: 1}, function(err, users) {
     res.json(users);
   });
 });
 
 // Ruta para listar usuarios online (GET http://localhost:8080/api/online)
 apiRoutes.get('/online', function(req, res) {
-    User.find({online: true}, function(err, users) {
+    User.find({online: true},{name: 1,online: 1}, function(err, users) {
         res.json(users);
     });
   });
