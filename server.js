@@ -95,7 +95,7 @@ apiRoutes.post('/authenticate', function(req, res) {
                     admin: user.admin 
                 };
                 var token = jwt.sign(payload, app.get('superSecret'), {
-                    expiresIn: 20 // Expira en 10 minutos
+                    expiresIn: 600 // Expira en 10 minutos
                 });
 
                 //Actualiza el campo TOKEN del usuario
