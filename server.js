@@ -9,7 +9,8 @@ var mongoose    = require('mongoose');
 
 var jwt    = require('jsonwebtoken'); // Crea, firma, y verifica los tokens
 var config = require('./config'); // Archivo de configuracion
-var User   = require('./app/models/user'); // mongoose model
+var User   = require('./app/models/user'); // mongoose user model
+var Message = require('./app/models/message'); // mongoose message model
 
 // =======================
 // configuration
@@ -93,20 +94,25 @@ apiRoutes.post('/authenticate', function(req, res) {
                     admin: user.admin 
                 };
                 var token = jwt.sign(payload, app.get('superSecret'), {
-                    expiresIn: 20 // Expira en 10 minutos
+                    expiresIn: 600 // Expira en 10 minutos
                 });
 
                 //Actualiza el campo TOKEN del usuario
                 user.activeToken = token
                 user.save(function(err) {
                     if (err) throw err;
-                  });
+                });
 
-                // Retorna la data con el token
-                res.json({
+                Message.find({ name_to: user.name}, function(err, message) {
+                    if (err) throw err;
+                    
+                    // Retorna la data con el token
+                    res.json({
                     success: true,
                     message: 'Token generado',
-                    token: token
+                    token: token,
+                    messages: message
+                    });
                 });
             }   
         }
@@ -170,6 +176,53 @@ apiRoutes.get('/', function(req, res) {
             }
         ] 
     });
+});
+
+// Enviar un mensaje (POST http://localhost:8080/api/sendMessage)
+apiRoutes.post('/sendMessage', function(req, res) {
+    //Checkeo parametros recibidos, que exista el otro usuario
+    User.findOne({ name: req.body.name}, function(err, user) {
+        if (err) throw err;
+        if (!user) {
+            res.json({ 
+                success: false, 
+                message: 'Usuario destino no encontrado, no es posible enviar el mensaje.'
+            });
+        }
+        else {
+            //Busco el usuario que envia el mensaje
+            User.findOne({ activeToken: req.body.token }, function(err, user2){
+                if(err) throw err;
+                if(!user2){
+                    res.json({
+                        succes: false,
+                        message: 'Error al vincular usuario que envia el mensaje, reintente con pidiendo token'
+                    });
+                }
+                else{
+                    console.log(user2);
+
+                    var message = new Message({
+                        name_from : user2.name,
+                        name_to : user.name,
+                        message : req.body.message,
+                        date : Date.now()  
+                    });
+
+                    // Almacena el mensaje
+                    message.save(function(err) {
+                        if (err) throw err;
+                    });
+
+                    // Retorna la data con el token
+                    res.json({
+                        success: true,
+                        message: 'Mensaje enviado'
+                    });    
+                }
+            });
+        }   
+    })
 });
 
 // Ruta para listar usuarios (GET http://localhost:8080/api/users)
