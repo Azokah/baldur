@@ -113,6 +113,10 @@ apiRoutes.post('/authenticate', function(req, res) {
                     token: token,
                     messages: message
                     });
+
+                    Message.deleteMany({ name_to: user.name }, function(err) {
+                        console.log(err);
+                    });
                 });
             }   
         }
