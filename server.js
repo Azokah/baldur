@@ -208,6 +208,22 @@ apiRoutes.post('/sendMessage', async function(req, res) {
     }
 });
 
+// POST Mensajes (POST http://localhost:8080/api/getMessages)
+apiRoutes.post('/getMessages', async function(req, res) {
+    if(req.body.token.length > 0)
+    {
+        _return = await getMessages(req.body.token);
+        res.json(_return);
+    }
+    else
+    {
+        res.json({
+            success: false,
+            message: "Corrobore los datos enviados"
+        });
+    }
+});
+
 function sendMessage(token, message, names){
     var response = [];
     return new Promise( async function (resolve, reject){
@@ -262,7 +278,7 @@ async function getUserByName(name){
             if (!user) {
                 reject({
                     "success": false,
-                    "message": "usuario destino no encontrado" + name + "mensaje no enviado"
+                    "message": "usuario destino no encontrado " + name + " mensaje no enviado"
                 });
             }
             else {
@@ -270,6 +286,22 @@ async function getUserByName(name){
             }
         });
     });
+}
+
+function getMessages(token){
+    var response = [];
+    return new Promise( async function (resolve, reject){
+        _user = await getUserByToken(token);
+        Message.find({ name_to: _user.name}, function(err, message) {
+            if (err) throw err;
+
+            Message.deleteMany({ name_to: _user.name }, function(err) {
+                console.log(err);
+            });
+
+            resolve(message);
+        });
+    })
 }
 
 async function getUserByToken(token){
