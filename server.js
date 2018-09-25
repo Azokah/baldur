@@ -126,6 +126,40 @@ apiRoutes.post('/authenticate', function(req, res) {
     });
 });
 
+// Mensaje si entramos a la direccion dela api (GET http://localhost:8080/api/)
+apiRoutes.get('/', function(req, res) {
+    res.json({
+        greeting: "Hola",
+        message: 'Lista de endpoints',
+        endpoints: [
+        {
+            name: "setup",
+            url: "http://localhost:8080/api/setup",
+            method: "GET",
+            desc: "Crea usuario con permisos de administrador"
+        },
+        {
+            name: "users",
+            method: "GET",
+            url: "http://localhost:8080/api/users",
+            desc: "Devuelve la lista de usuarios"
+        },
+        {
+            name: "online",
+            method: "GET",
+            url: "http://localhost:8080/api/online",
+            desc: "Devuelve la lista de usuarios online"
+        },
+        {
+            name: "sendMessage",
+            method:"POST",
+            url:"http://localhost:8080/api/sendMessage",
+            desc: "Envia mensaje a otro usuario"
+        }
+        ] 
+    });
+});
+
 // Middleware que verifica el token
 apiRoutes.use(function(req, res, next) {
     // Busca el token dentro del request
@@ -158,80 +192,109 @@ apiRoutes.use(function(req, res, next) {
     }
 });
 
-// Mensaje si entramos a la direccion dela api (GET http://localhost:8080/api/)
-apiRoutes.get('/', function(req, res) {
-  res.json({
-        greeting: "Hola "+req.body.name,
-       message: 'Lista de endpoints',
-       endpoints: [
-            {
-                name: "setup",
-                url: "http://localhost:8080/api/setup",
-                method: "GET",
-                desc: "Crea usuario con permisos de administrador"
-            },
-            {
-                name: "users",
-                method: "GET",
-                url: "http://localhost:8080/api/users",
-                desc: "Devuelve la lista de usuarios"
-            },
-            {
-                name: "online",
-                method: "GET",
-                url: "http://localhost:8080/api/online",
-                desc: "Devuelve la lista de usuarios online"
-            }
-        ] 
-    });
-});
-
 // Enviar un mensaje (POST http://localhost:8080/api/sendMessage)
-apiRoutes.post('/sendMessage', function(req, res) {
-    //Checkeo parametros recibidos, que exista el otro usuario
-    User.findOne({ name: req.body.name}, function(err, user) {
-        if (err) throw err;
-        if (!user) {
-            res.json({ 
-                success: false, 
-                message: 'Usuario destino no encontrado, no es posible enviar el mensaje.'
-            });
-        }
-        else {
-            //Busco el usuario que envia el mensaje
-            User.findOne({ activeToken: req.body.token }, function(err, user2){
-                if(err) throw err;
-                if(!user2){
-                    res.json({
-                        succes: false,
-                        message: 'Error al vincular usuario que envia el mensaje, reintente con pidiendo token'
-                    });
-                }
-                else{
-                    console.log(user2);
-
-                    var message = new Message({
-                        name_from : user2.name,
-                        name_to : user.name,
-                        message : req.body.message,
-                        date : Date.now()  
-                    });
-
-                    // Almacena el mensaje
-                    message.save(function(err) {
-                        if (err) throw err;
-                    });
-
-                    // Retorna la data con el token
-                    res.json({
-                        success: true,
-                        message: 'Mensaje enviado'
-                    });    
-                }
-            });
-        }   
-    })
+apiRoutes.post('/sendMessage', async function(req, res) {
+    if(req.body.name.length > 0 && req.body.token.length > 0)
+    {
+        _return = await sendMessage(req.body.token, req.body.message, req.body.name);
+        res.json(_return);
+    }
+    else
+    {
+        res.json({
+            success: false,
+            message: "Corrobore los datos enviados"
+        });
+    }
 });
+
+function sendMessage(token, message, names){
+    var response = [];
+    return new Promise( async function (resolve, reject){
+        _sender = await getUserByToken(token);
+        await asyncForEach(names, async function(name){
+            try
+            {
+                _recipient = await getUserByName(name);
+                _message = await saveMessages(_sender, _recipient, message);
+                response.push(_message);
+            }
+            catch(error)
+            {
+                response.push(error);
+            }
+        })
+        resolve(response);
+    })
+}
+
+async function saveMessages(sender, recipient, message){
+    return new Promise( function(resolve, reject){
+        var messageToSend = new Message({
+            name_from : sender.name,
+            name_to : recipient.name,
+            message : message,
+            date : Date.now()  
+        });
+
+        messageToSend.save(function(err) {
+            if (err) {
+                resolve({
+                    "success": false,
+                    "message": "Error al almacenar mensaje a "+ recipient.name +" el mensaje en la base de datos",
+                    "error": err
+                });
+            }
+            else {
+                resolve({
+                    "succes": true,
+                    "message": "Mensaje enviado a "+ recipient.name + " correctamente"
+                });
+            }
+        });
+    });
+};
+
+async function getUserByName(name){
+    return new Promise(function(resolve, reject){
+        User.findOne({ name: name }, function(err, user){
+            if (err) reject(err);
+            if (!user) {
+                reject({
+                    "success": false,
+                    "message": "usuario destino no encontrado" + name + "mensaje no enviado"
+                });
+            }
+            else {
+                resolve(user);
+            }
+        });
+    });
+}
+
+async function getUserByToken(token){
+    return new Promise(function(resolve, reject){
+        User.findOne({ activeToken: token }, function(err, user){
+            if (err) reject(err);
+            if (!user) {
+                resolve({
+                    "success": false,
+                    "message": "Token de usuario expirado, reintente"
+                });
+            }
+            else {
+                resolve(user);
+            }
+        });
+    });
+}
+
+async function asyncForEach(array, callback) {
+    names = array.split(";");
+    for (let index = 0; index < names.length; index++) {
+      await callback(names[index], index, array)
+    }
+}
 
 // Ruta para listar usuarios (GET http://localhost:8080/api/users)
 apiRoutes.get('/users', function(req, res) {
@@ -245,7 +308,7 @@ apiRoutes.get('/online', function(req, res) {
     User.find({online: true},{name: 1,online: 1}, function(err, users) {
         res.json(users);
     });
-  });
+});
 
 
 // Ruta generica de la api, agrega prefix API a la url
