@@ -332,14 +332,14 @@ async function asyncForEach(array, callback) {
 }
 
 // Ruta para listar usuarios (GET http://localhost:8080/api/users)
-apiRoutes.get('/users', function(req, res) {
+apiRoutes.post('/users', function(req, res) {
   User.find({}, {name: 1,online: 1}, function(err, users) {
     res.json(users);
   });
 });
 
 // Ruta para listar usuarios online (GET http://localhost:8080/api/online)
-apiRoutes.get('/online', function(req, res) {
+apiRoutes.post('/online', function(req, res) {
     User.find({online: true},{name: 1,online: 1}, function(err, users) {
         res.json(users);
     });
