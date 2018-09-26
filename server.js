@@ -170,13 +170,16 @@ apiRoutes.use(function(req, res, next) {
       jwt.verify(token, app.get('superSecret'), function(err, decoded) {      
         if (err) {
             User.findOne({ activeToken: token}, function(err, user) {
-                user.activeToken = ''
-                user.online = false
-                user.save(function(err) {
-                    if (err) throw err;
-                  });
+                if(user)
+                {
+                    user.activeToken = ''
+                    user.online = false
+                    user.save(function(err) {
+                        if (err) throw err;
+                    });
+                }
             });
-          return res.json({ success: false, message: 'Error al autenticar el token.' });    
+          return res.status(403).json({ success: false, message: 'Error al autenticar el token.' });    
         } else {
           // Si el token esta OK, continua con la ejecucion
           req.decoded = decoded;    
