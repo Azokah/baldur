@@ -52,17 +52,17 @@ app.get('/setup', function(req, res) {
   });
 
 // Registracion de Usuario
-app.get('/register', function(req,res){
+app.post('/register', function(req,res){
     //'Formulario' de usuario
-    if(req.query.name && req.query.password){
+    if(req.body.name && req.body.password){
         var user = new User({
-            name: req.query.name,
-            password: req.query.password,
+            name: req.body.name,
+            password: req.body.password,
             admin: false,
             online: false,
             activeToken: ''
         });
-        console.log(req.query)
+        console.log(req.body)
         //Guardamos el nuevo user en la db
         user.save(function(err) {
             if (err) throw err;
