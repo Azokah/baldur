@@ -1,7 +1,7 @@
 // =======================
 // Paquetes necesarios
 // =======================
-var express     = require('express');
+var express     = require('express'), cors = require('cors'), app = express();
 var app         = express();
 var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
@@ -11,6 +11,7 @@ var jwt    = require('jsonwebtoken'); // Crea, firma, y verifica los tokens
 var config = require('./config'); // Archivo de configuracion
 var User   = require('./app/models/user'); // mongoose user model
 var Message = require('./app/models/message'); // mongoose message model
+var MessageArchive = require('./app/models/messagesarchive'); // mongoose message archive model
 
 // =======================
 // configuration
@@ -18,6 +19,7 @@ var Message = require('./app/models/message'); // mongoose message model
 var port = process.env.PORT || 8080; // Puerto
 mongoose.connect(config.database); // Conexion a la base de datos
 app.set('superSecret', config.secret); // Variable secreta
+app.options('*', cors()); // preflight OPTIONS; put before other routes
 
 // Parses para obtener informacion de los POST o URL llamada
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -96,7 +98,7 @@ apiRoutes.post('/authenticate', function(req, res) {
                     admin: user.admin 
                 };
                 var token = jwt.sign(payload, app.get('superSecret'), {
-                    expiresIn: 600 // Expira en 10 minutos
+                    expiresIn: 600000 // Expira en 10 minutos
                 });
 
                 //Actualiza el campo TOKEN del usuario
@@ -116,6 +118,8 @@ apiRoutes.post('/authenticate', function(req, res) {
                     token: token,
                     messages: message
                     });
+
+                    
 
                     Message.deleteMany({ name_to: user.name }, function(err) {
                         console.log(err);
@@ -227,13 +231,14 @@ apiRoutes.post('/getMessages', async function(req, res) {
     }
 });
 
-function sendMessage(token, message, names){
+async function sendMessage(token, message, names){
     var response = [];
     return new Promise( async function (resolve, reject){
         _sender = await getUserByToken(token);
         await asyncForEach(names, async function(name){
             try
             {
+                console.log("for each para: "+name)
                 _recipient = await getUserByName(name);
                 _message = await saveMessages(_sender, _recipient, message);
                 response.push(_message);
@@ -309,6 +314,7 @@ function getMessages(token){
 
 async function getUserByToken(token){
     return new Promise(function(resolve, reject){
+        console.log("metodo get user by token")
         User.findOne({ activeToken: token }, function(err, user){
             if (err) reject(err);
             if (!user) {
