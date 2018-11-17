@@ -1,0 +1,55 @@
+.App,html,body {
+  text-align: center;
+  background-color: #414f6b;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  max-height: 100%;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 40vmin;
+}
+
+.IntroLogo{
+  width: 25%;
+}
+
+.ScrollBox {
+  padding-left: 25%;
+  padding-top: 5%; 
+  height: 75%;
+  position: absolute;
+  display: block;
+  text-align: center;
+  max-width: 100%;
+  margin: auto;
+  width: 50%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  max-height: 100%;
+}
+
+.App-header {
+  background-color: #282c34;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
