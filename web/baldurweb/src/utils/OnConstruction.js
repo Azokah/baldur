@@ -3,14 +3,14 @@ import {fetchApi} from "./restMethods.js"
 import '../App.css';
 
 //var config = require('../config/bragi.config.json');
-const logo = require("../static/images/tenor.gif");//No me deja usar una constante de config.bragiPortrait
+const logo = require("../static/images/underconstruction.gif");//No me deja usar una constante de config.bragiPortrait
 
 //import SideMenu from './utils/SideMenu.js'
 
-class Twitter extends Component {
+class OnConstruction extends Component {
   constructor(props){
     super(props)
-	  this.state = {helloString: "Twitter"};
+	  this.state = {helloString: "On Construction!"};
   }
   
   render() {
@@ -26,4 +26,4 @@ class Twitter extends Component {
   }
 }
 
-export default Twitter;
+export default OnConstruction;

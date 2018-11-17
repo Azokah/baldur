@@ -15,39 +15,21 @@ class SideMenu extends Component {
                 this.handleClick(selected);
               }}>
               <SideNav.Toggle />
-              <SideNav.Nav defaultSelected={"index"}>
-              <NavItem eventKey={"twitter"}>
+              <SideNav.Nav defaultSelected={"mail"}>
+              <NavItem eventKey={"mail"}>
                 <NavIcon>
-                  <img src={require("../static/images/twitter.png")} className="Nav-logo"/>
+                  <img src={require("../static/images/recieve.png")} className="Nav-logo"/>
                 </NavIcon>
                 <NavText>
-                  Twitter
+                  Buzon
                 </NavText>
               </NavItem>
-              <NavItem eventKey={"slack"}>
+              <NavItem eventKey={"enviar"}>
                 <NavIcon>
-                  <img src={require("../static/images/slack.png")} className="Nav-logo"/>
+                  <img src={require("../static/images/send.png")} className="Nav-logo"/>
                 </NavIcon>
                 <NavText>
-                  Slack
-                </NavText>
-                  <NavItem eventKey={"slack-message"}>
-                  <NavText>
-                    Send Message
-                  </NavText>
-                  </NavItem>
-                  <NavItem eventKey={"slack-chat"}>
-                  <NavText>
-                    See chat
-                  </NavText>
-                </NavItem>
-              </NavItem>
-              <NavItem eventKey={"telegram"}>
-                <NavIcon>
-                  <img src={require("../static/images/telegram.png")} className="Nav-logo"/>
-                </NavIcon>
-                <NavText>
-                  Telegram
+                  Enviar mensaje
                 </NavText>
               </NavItem>
               </SideNav.Nav>

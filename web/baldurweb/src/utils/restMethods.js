@@ -1,4 +1,4 @@
-var config = require('../config/bragi.config.json');
+var config = require('../config/balder.config.json');
 
 export function fetchApi(endPoint, payload = {}, method = 'GET', headers = {}) {
     

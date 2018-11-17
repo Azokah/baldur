@@ -1,10 +1,9 @@
 import React, { Component } from 'react'
 import SideMenu from "./utils/SideMenu.js"
-import IndexHome from "./utils/IndexHome.js"
-import Slack from "./utils/Slack.js"
-import SlackSendMessage from "./utils/SlackSendMessage.js"
-import Twitter from "./utils/Twitter.js"
-import Telegram from "./utils/Telegram.js"
+import Login from "./utils/Login.js"
+import OnConstruction from "./utils/OnConstruction.js"
+import SendMessage from "./utils/SendMessage.js"
+import RecieveMail from "./utils/RecieveMail.js"
 import './App.css';
 
 //import SideMenu from './utils/SideMenu.js'
@@ -21,16 +20,14 @@ class App extends Component {
 
   switchRender(props){
     const page = props.page;
-    if(page == "twitter"){
-      return <Twitter />
-    }else if(page == "telegram"){
-      return <Telegram />
-    }else if(page == "slack-message"){
-      return <SlackSendMessage />
-    }else if(page == "slack-chat"){
-      return <Slack />
+    if(page == "construction"){
+      return <OnConstruction />
+    }if(page == "mail"){
+      return <RecieveMail />
+    }if(page == "enviar"){
+      return <SendMessage />
     }else{
-      return <IndexHome />
+      return <Login />
     }
   }
   render() {
