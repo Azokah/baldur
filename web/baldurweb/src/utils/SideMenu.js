@@ -32,6 +32,14 @@ class SideMenu extends Component {
                   Enviar mensaje
                 </NavText>
               </NavItem>
+              <NavItem eventKey={"logout"}>
+                <NavIcon>
+                  <img src={require("../static/images/logout.png")} className="Nav-logo"/>
+                </NavIcon>
+                <NavText>
+                  Logout
+                </NavText>
+              </NavItem>
               </SideNav.Nav>
             </SideNav>
         );

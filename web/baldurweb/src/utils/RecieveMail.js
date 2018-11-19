@@ -20,7 +20,7 @@ class Slack extends Component {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6ZmFsc2UsImlhdCI6MTU0MjQ5NzQ5OCwiZXhwIjoxNTQzMDk3NDk4fQ.L_O5G--DhqiT5ivD2WPy5cV_41i14hFiZvlAfROjt6M"
+				token: window.localStorage.getItem("token")
 			})
 		}).then((response) => {
 			return response.json()

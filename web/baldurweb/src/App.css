@@ -12,6 +12,11 @@
   height: 40vmin;
 }
 
+#OnlineUser {
+  color: yellowgreen;
+  
+}
+
 .IntroLogo{
   width: 25%;
 }

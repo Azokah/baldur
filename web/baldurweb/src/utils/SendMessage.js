@@ -8,7 +8,7 @@ var config = require('../config/balder.config.json');
 class SendMessage extends Component {
 	constructor(props) {
 		super(props)
-		this.state = { token: "null",usersDestination: "No online users"};
+		this.state = { token: "null",usersDestination: "No online users", successSent: false};
 
 		fetch(config.url_api + '/api/users', {
 			method: 'post',
@@ -17,7 +17,7 @@ class SendMessage extends Component {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6ZmFsc2UsImlhdCI6MTU0MjQ5NzQ5OCwiZXhwIjoxNTQzMDk3NDk4fQ.L_O5G--DhqiT5ivD2WPy5cV_41i14hFiZvlAfROjt6M"
+				token: window.localStorage.getItem("token")
 			})
 		}).then((response) => {
 			return response.json()
@@ -32,7 +32,23 @@ class SendMessage extends Component {
 
 	handleSubmit(event) {
 		event.preventDefault();
-		console.log(event.target[0].value);
+		var names = "";
+		var noOneSelected = true;
+		for(var i = 0; i < event.target[0].length; i++){
+			if(event.target[0][i].selected == true){
+				if(names == ""){
+					names += event.target[0][i].value;	
+				}else names += ";" + event.target[0][i].value;
+				noOneSelected = false;
+			}
+		}
+		if(noOneSelected == true)
+			for(var i = 0; i < event.target[0].length; i++){
+				if(names == ""){
+					names += event.target[0][i].value;	
+				}else names += ";" + event.target[0][i].value;
+		}
+		console.log(names);
 		console.log(event.target[1].value);
 		fetch(config.url_api + '/api/sendMessage', {
 			method: 'post',
@@ -41,25 +57,30 @@ class SendMessage extends Component {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6ZmFsc2UsImlhdCI6MTU0MjQ5NzQ5OCwiZXhwIjoxNTQzMDk3NDk4fQ.L_O5G--DhqiT5ivD2WPy5cV_41i14hFiZvlAfROjt6M",
+				token: window.localStorage.getItem("token"),
 				message: event.target[1].value,
-				name: event.target[0].value
+				name: names
 			})
 		}).then((response) => {
 			return response.json()
 		})
 		.then((recurso) => {
 			console.log(JSON.stringify(recurso));
-			this.setState({ text: recurso });
+			console.log(recurso[0]["succes"]);
+			if(recurso[0]["succes"] == true)
+				this.setState({ successSent: "Mensaje enviado correctamente." });
+			else this.setState({ successSent: "No se pudo enviar mensaje." });
 		});
 	}
 
 	createDropDown(props){
 		
-		var html = '<select name="user">';
+		var html = '<select name="user" multiple="multiple">';
 
 		for(var i= 0;i < this.state.usersDestination.length; i++){
-			html+='<option value="' + this.state.usersDestination[i].name +'">' +this.state.usersDestination[i].name +'</option>';
+			if(this.state.usersDestination[i].online == true){
+				html+='<option id="OnlineUser" value="' + this.state.usersDestination[i].name +'">' +this.state.usersDestination[i].name +'</option>';
+			}else html+='<option value="' + this.state.usersDestination[i].name +'">' +this.state.usersDestination[i].name +'</option>';
 		}
 
 		html +="</select>";
@@ -83,6 +104,7 @@ class SendMessage extends Component {
 						</label>
 						<p /><input type="submit" value="Submit" />
 					</form>
+					<p>{this.state.successSent}</p>
 				</div>
 			</div>
 		);

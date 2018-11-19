@@ -11,30 +11,33 @@ import './App.css';
 class App extends Component {
   constructor(props){
     super(props)
-	  this.state = {currentView: "index"};
+	  this.state = {currentView: "mail"};
 
-     this.updateView = this.updateView.bind();
+     this.updateView = this.updateView.bind(this);
   }
 
   updateView = (view) => {this.setState({currentView: view })};
 
   switchRender(props){
     const page = props.page;
-    if(page == "construction"){
+    if(window.localStorage.getItem("token") == "null"){
+      return <Login update={props.update}/>
+    }else if(page == "construction"){
       return <OnConstruction />
-    }if(page == "mail"){
+    }else if(page == "mail"){
       return <RecieveMail />
-    }if(page == "enviar"){
+    }else if(page == "enviar"){
       return <SendMessage />
-    }else{
-      return <Login />
-    }
+    }else if(page == "logout"){
+      window.localStorage.setItem("token", "null");
+      return <Login update={props.update}/>
+    };
   }
   render() {
     return (
       <div className="App">
         <SideMenu update={this.updateView}/>
-        <this.switchRender page={this.state.currentView}/>
+        <this.switchRender page={this.state.currentView} update={this.updateView}/>
       </div>
     );
   }
