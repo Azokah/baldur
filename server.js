@@ -6,12 +6,12 @@ var app         = express();
 var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
+var scheduler   = require('node-schedule');
 
 var jwt    = require('jsonwebtoken'); // Crea, firma, y verifica los tokens
 var config = require('./config'); // Archivo de configuracion
 var User   = require('./app/models/user'); // mongoose user model
 var Message = require('./app/models/message'); // mongoose message model
-var MessageArchive = require('./app/models/messagesarchive'); // mongoose message archive model
 
 // =======================
 // configuration
@@ -98,32 +98,22 @@ apiRoutes.post('/authenticate', function(req, res) {
                     admin: user.admin 
                 };
                 var token = jwt.sign(payload, app.get('superSecret'), {
-                    expiresIn: 600000 // Expira en 10 minutos
+                    expiresIn: 600 // Expira en 10 minutos
                 });
 
                 //Actualiza el campo TOKEN del usuario
-                user.activeToken = token
-                user.online = true
+                user.activeToken = token;
+                user.online = true;
+                user.signDate = Date.now();
                 user.save(function(err) {
                     if (err) throw err;
                 });
 
-                Message.find({ name_to: user.name}, function(err, message) {
-                    if (err) throw err;
-                    
-                    // Retorna la data con el token
-                    res.json({
+                // Retorna la data con el token
+                res.json({
                     success: true,
                     message: 'Token generado',
-                    token: token,
-                    messages: message
-                    });
-
-                    
-
-                    Message.deleteMany({ name_to: user.name }, function(err) {
-                        console.log(err);
-                    });
+                    token: token
                 });
             }   
         }
@@ -238,7 +228,6 @@ async function sendMessage(token, message, names){
         await asyncForEach(names, async function(name){
             try
             {
-                console.log("for each para: "+name)
                 _recipient = await getUserByName(name);
                 _message = await saveMessages(_sender, _recipient, message);
                 response.push(_message);
@@ -314,7 +303,6 @@ function getMessages(token){
 
 async function getUserByToken(token){
     return new Promise(function(resolve, reject){
-        console.log("metodo get user by token")
         User.findOne({ activeToken: token }, function(err, user){
             if (err) reject(err);
             if (!user) {
@@ -339,18 +327,24 @@ async function asyncForEach(array, callback) {
 
 // Ruta para listar usuarios (GET http://localhost:8080/api/users)
 apiRoutes.post('/users', function(req, res) {
-  User.find({}, {name: 1,online: 1}, function(err, users) {
-    res.json(users);
-  });
-});
-
-// Ruta para listar usuarios online (GET http://localhost:8080/api/online)
-apiRoutes.post('/online', function(req, res) {
-    User.find({online: true},{name: 1,online: 1}, function(err, users) {
+    User.find({}, {name: 1,online: 1}, function(err, users) {
         res.json(users);
     });
 });
 
+// Ruta para listar usuarios online (GET http://localhost:8080/api/online)
+apiRoutes.post('/online', async function(req, res) {
+    var users = await asyncGetOnlineUsers()
+    res.json(users);
+});
+
+async function asyncGetOnlineUsers(){
+    return new Promise(function(resolve, reject){
+        User.find({online: true},{name: 1,online: 1, signDate: 1}, function(err, users) {
+            resolve(users);
+        });
+    });
+}
 
 // Ruta generica de la api, agrega prefix API a la url
 app.use('/api', apiRoutes);
@@ -360,3 +354,21 @@ app.use('/api', apiRoutes);
 // =======================
 app.listen(port);
 console.log('Corriendo: http://localhost:' + port);
+
+scheduler.scheduleJob("*/10 * * * *", async function() {
+    var onlineUsers = await asyncGetOnlineUsers();
+    var now = Date.now();
+    onlineUsers.forEach(user => {
+        if(user.signDate != undefined){
+            var diff = now - user.signDate;
+            if(Math.round(((diff % 86400000) % 3600000) / 60000) > 1){
+                user.online = false;
+                user.signDate = new Date("1900-01-01");
+                user.activeToken = "";
+                user.save(function(err) {
+                    if (err) throw err;
+                });
+            }
+        }
+    });
+});
