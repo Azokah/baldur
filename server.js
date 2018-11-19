@@ -363,7 +363,8 @@ scheduler.scheduleJob("*/10 * * * *", async function() {
             var diff = now - user.signDate;
             if(Math.round(((diff % 86400000) % 3600000) / 60000) > 1){
                 user.online = false;
-                user.signDate = null;
+                user.signDate = new Date("1900-01-01");
+                user.activeToken = "";
                 user.save(function(err) {
                     if (err) throw err;
                 });
